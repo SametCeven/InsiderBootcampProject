@@ -369,9 +369,9 @@ main = ($) => {
             }
         });
 
-        $(window).on("resize", () => {
+        $(window).on("resize", self.debounce(() => {
             self.updateSliderPosition();
-        })
+        }, 200))
 
         $(document).on("click.eventListener", selectors.favoriteOption, (e) => {
             const $target = $(e.currentTarget).find(selectors.favPath);
@@ -384,7 +384,7 @@ main = ($) => {
             self.isDragging = true;
             self.startX = e.pageX;
             self.scrollLeft = e.currentTarget.scrollLeft;
-            $(selectors.sliderTray).find("img").on("dragstart", (e)=> e.preventDefault());
+            $(selectors.sliderTray).find("img").on("dragstart", (e) => e.preventDefault());
             $(selectors.body).css({
                 "user-select": "none",
             })
@@ -398,7 +398,7 @@ main = ($) => {
         })
 
         $(document).on("mousemove.eventListener", selectors.sliderTray, (e) => {
-            if(!self.isDragging) return;
+            if (!self.isDragging) return;
             e.preventDefault();
             const x = e.pageX;
             const walk = (x - self.startX) * 1.5;
@@ -422,10 +422,10 @@ main = ($) => {
         })
 
         $(document).on("touchmove.eventListener", selectors.sliderTray, (e) => {
-            if(!self.isDragging) return;
+            if (!self.isDragging) return;
 
             const x = e.originalEvent.touches[0].pageX;
-            const walk = (x- self.startX) * 1.5;
+            const walk = (x - self.startX) * 1.5;
             e.currentTarget.scrollLeft = self.scrollLeft - walk;
 
             e.preventDefault();
@@ -516,7 +516,7 @@ main = ($) => {
     self.renderError = () => {
         const $errNotification = $(`<div> ${self.error} </div>`);
         $(selectors.recommendationCarousel).remove();
-        $(selectors.appendLocation).append($errNotification); 
+        $(selectors.appendLocation).append($errNotification);
     }
 
     self.loadFont = () => {
@@ -570,8 +570,19 @@ main = ($) => {
 
     self.initialDataFetch = async () => {
         self.getProductStorage();
-        if(!self.productData){
+        if (!self.productData) {
             await self.fetchData();
+        }
+    }
+
+    self.debounce = (func, wait) => {
+        let timeout;
+        return function (...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                func.apply(context, args);
+            }, wait);
         }
     }
 
