@@ -39,6 +39,8 @@ main = ($) => {
         productCardInfoPrice: "product-card-info-price",
         productCardInfoCurrentPrice: "product-card-info-current-price",
         favLiked: "fav-liked",
+        addToCart: "add-to-cart",
+        addToCart: "add-to-cart-btn",
     };
 
     const selectors = {
@@ -70,6 +72,9 @@ main = ($) => {
         productImg: `.${classes.productCardImgWrapper} img`,
         recommendationCarouselA: `.${classes.recommendationCarousel} a`,
         favLiked: `.${classes.favLiked}`,
+        favPath: `svg.fav path`,
+        addToCart: `.${classes.addToCart}`,
+        addToCartBtn: `.${classes.addToCartBtn}`,
     };
 
     const self = {
@@ -77,20 +82,24 @@ main = ($) => {
         error: null,
         productData: [],
         currentIndex: 0,
+        favStorage: [],
     };
 
     const icons = {
         chevronButtonLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="14.242" height="24.242" viewBox="0 0 14.242 24.242"><path fill="none" stroke="#333" stroke-linecap="round" stroke-width="3px" d="M2106.842 2395.467l-10 10 10 10" transform="translate(-2094.721 -2393.346)"></path></svg>`,
-        fav: `<svg xmlns="http://www.w3.org/2000/svg" width="21" height="20" fill="none"><path fill="#fff" fill-rule="evenodd" stroke="#B6B7B9" d="M19.97 6.449c-.277-3.041-2.429-5.247-5.123-5.247-1.794 0-3.437.965-4.362 2.513C9.57 2.147 7.993 1.2 6.228 1.2c-2.694 0-4.846 2.206-5.122 5.247-.022.135-.112.841.16 1.994.393 1.663 1.3 3.175 2.621 4.373l6.594 5.984 6.707-5.984c1.322-1.198 2.228-2.71 2.62-4.373.273-1.152.183-1.86.162-1.993z" clip-rule="evenodd"></path></svg>`,
+        fav: `<svg class="fav" xmlns="http://www.w3.org/2000/svg" width="21" height="20" fill="none"><path fill="#fff" fill-rule="evenodd" stroke="#B6B7B9" d="M19.97 6.449c-.277-3.041-2.429-5.247-5.123-5.247-1.794 0-3.437.965-4.362 2.513C9.57 2.147 7.993 1.2 6.228 1.2c-2.694 0-4.846 2.206-5.122 5.247-.022.135-.112.841.16 1.994.393 1.663 1.3 3.175 2.621 4.373l6.594 5.984 6.707-5.984c1.322-1.198 2.228-2.71 2.62-4.373.273-1.152.183-1.86.162-1.993z" clip-rule="evenodd"></path></svg>`,
     }
 
-    self.init = () => {
+    self.init = async () => {
         self.reset();
         self.loadFont();
         self.buildCSS();
         self.buildHTML();
         self.setEvents();
-        self.fetchData();
+        await self.initialDataFetch();
+        self.renderProducts();
+        self.getFavStorage();
+        self.applyInitialFavStorage();
     };
 
     self.reset = () => {
@@ -122,7 +131,7 @@ main = ($) => {
                 color: rgb(48, 46, 43);
             }
             ${selectors.carouselContainer}{
-                
+                width: 100%;
             }
             ${selectors.similarProductTitle}{
                 font-size: 24px;
@@ -138,6 +147,7 @@ main = ($) => {
                 position: relative;
             }
             ${selectors.carouselBtn}{
+                display: none;
                 position: absolute;
                 top: 50%;
                 background: none;
@@ -155,7 +165,7 @@ main = ($) => {
             ${selectors.slider}{
                 position: relative;
                 overflow: hidden;
-                height: 396.328px;
+                height: 540px;
                 cursor: pointer;
             }
             ${selectors.sliderWrapper}{
@@ -171,7 +181,7 @@ main = ($) => {
                 transition: transform 500ms;
                 transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
                 will-change: auto;
-                gap: 10px;
+                gap: 30px;
             }
             ${selectors.productContainer}{
                 padding-bottom: unset;
@@ -188,7 +198,7 @@ main = ($) => {
             }
             ${selectors.productCard}{
                 width: 280px;
-                height: auto;
+                height: 511px;
                 color: rgb(85, 85, 85);
                 position: relative;
                 background-color: rgb(255, 255, 255);
@@ -248,9 +258,32 @@ main = ($) => {
                 align-items: flex-end;
                 line-height: 22px;
                 font-weight: bold;
+                
             }
             ${selectors.favLiked}{
-                color: #007aff;
+                fill: #193DB0;
+            }
+            ${selectors.favoriteOption}{
+                cursor: default;
+            }
+            ${selectors.addToCart}{
+                display: flex;
+                gap: 5px;
+            }
+            ${selectors.addToCartBtn}{
+                height: 35px;
+                display: block;
+                background-color: #193db0;
+                color: #fff;
+                width: 100%;
+                border-radius: 5px;
+                border: none;
+                line-height: 19px;
+                font-size: 14px;
+                font-weight: 600;
+                text-transform: uppercase;
+                cursor: pointer;
+                font-family: "Open Sans", sans-serif;
             }
             
             @media (min-width: 992px){
@@ -270,6 +303,19 @@ main = ($) => {
                 }
                 ${selectors.productCard}{
                     width: 220px;
+                    height: auto;
+                }
+                ${selectors.carouselBtn}{
+                    display: block;
+                }
+                ${selectors.slider}{
+                    height: 396.23px;
+                }
+                ${selectors.sliderTray}{
+                    gap: 10px;
+                }
+                ${selectors.addToCart}{
+                    display: none;
                 }
             }
 
@@ -305,14 +351,14 @@ main = ($) => {
 
     self.setEvents = () => {
         $(document).on("click.eventListener", selectors.buttonNext, (e) => {
-            const productWidth = $(selectors.productContainer).width();
-            const sliderTrayWidth = $(selectors.sliderTray).width();
+            const productWidth = $(selectors.productContainer).outerWidth();
+            const sliderTrayWidth = $(selectors.sliderTray).outerWidth();
 
             const visibleProductCount = Math.floor(sliderTrayWidth / productWidth);
             const totalProductsCount = self.productData.length;
             const maxIndex = totalProductsCount - visibleProductCount;
 
-            if(self.currentIndex < maxIndex){
+            if (self.currentIndex < maxIndex) {
                 self.currentIndex++;
                 self.updateSliderPosition();
             }
@@ -329,6 +375,13 @@ main = ($) => {
             self.updateSliderPosition();
         })
 
+        $(document).on("click.eventListener", selectors.favoriteOption, (e) => {
+            const $target = $(e.currentTarget).find(selectors.favPath);
+            $target.toggleClass(classes.favLiked);
+            const id = $target.closest(selectors.productContainer).data("id");
+            self.toggleFavStorage(id);
+        })
+
     };
 
 
@@ -338,18 +391,17 @@ main = ($) => {
         self.error = null;
         self.productData = [];
 
-        $.ajax({
-            url: baseUrl,
-            method: "GET",
-        }).done((res) => {
-            self.productData = JSON.parse(res);
-            self.loading = false;
-            self.renderProducts();
-        }).fail((err) => {
+        try {
+            const res = await fetch(baseUrl);
+            if (!res.ok) throw new Error(`Error : ${res.status}`);
+            const data = await res.json();
+            self.productData = data;
+            self.setProductStorage();
+        } catch (err) {
             self.error = err;
-        }).always(() => {
+        } finally {
             self.loading = false;
-        })
+        }
     }
 
 
@@ -357,7 +409,7 @@ main = ($) => {
         if (!self.loading && !self.error) {
             self.productData.forEach((product) => {
                 const $productItem = $(`
-                    <div class=${classes.productContainer}>
+                    <div class=${classes.productContainer} data-id=${product.id}>
                         <div class=${classes.productInnerContainer}>
                             <div class=${classes.productCard}>
                                 <div class=${classes.productCardImgWrapper}>
@@ -381,6 +433,9 @@ main = ($) => {
                                             ${product.price} TL
                                         </div>
                                     </div>
+                                    <div class=${classes.addToCart}>
+                                        <button class=${classes.addToCartBtn}> Add To Cart </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -401,14 +456,14 @@ main = ($) => {
 
     self.updateSliderPosition = () => {
         const $sliderTray = $(selectors.sliderTray);
-        const productWidth = $(selectors.productContainer).width();
+        const productWidth = $(selectors.productContainer).outerWidth() + 10;
         const sliderTrayFullWidth = $sliderTray[0].scrollWidth;
-        const sliderTrayWidth = $sliderTray.width();
+        const sliderTrayWidth = $sliderTray.outerWidth();
 
         let offset = self.currentIndex * productWidth;
         const maxOffset = sliderTrayFullWidth - sliderTrayWidth;
 
-        if(offset > maxOffset){
+        if (offset > maxOffset) {
             offset = maxOffset;
         }
 
@@ -417,7 +472,47 @@ main = ($) => {
         })
     }
 
+    self.toggleFavStorage = (id) => {
+        if (self.favStorage.includes(id)) {
+            self.favStorage = self.favStorage.filter((f) => f !== id);
+        } else {
+            self.favStorage.push(id);
+        }
+        localStorage.setItem("fav", JSON.stringify(self.favStorage));
+    }
 
+    self.getFavStorage = () => {
+        if (localStorage.getItem("fav")) {
+            self.favStorage = JSON.parse(localStorage.getItem("fav"));
+        } else {
+            localStorage.setItem("fav", self.favStorage);
+        }
+    }
+
+    self.applyInitialFavStorage = () => {
+        const $productContainer = $(selectors.productContainer);
+        $productContainer.each((index, product) => {
+            const id = $(product).data("id");
+            if (self.favStorage.includes(id)) {
+                $(product).find(selectors.favPath).toggleClass(classes.favLiked);
+            }
+        })
+    }
+
+    self.setProductStorage = () => {
+        localStorage.setItem("product", JSON.stringify(self.productData));
+    }
+
+    self.getProductStorage = () => {
+        self.productData = JSON.parse(localStorage.getItem("product"));
+    }
+
+    self.initialDataFetch = async () => {
+        self.getProductStorage();
+        if(!self.productData){
+            await self.fetchData();
+        }
+    }
 
     $(document).ready(self.init);
 
