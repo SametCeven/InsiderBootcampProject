@@ -83,6 +83,9 @@ main = ($) => {
         productData: [],
         currentIndex: 0,
         favStorage: [],
+        isDragging: false,
+        startX: 0,
+        scrollLeft: 0,
     };
 
     const icons = {
@@ -182,6 +185,8 @@ main = ($) => {
                 transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
                 will-change: auto;
                 gap: 30px;
+                overflow-x: hidden;
+                scroll-behavior: smooth;
             }
             ${selectors.productContainer}{
                 padding-bottom: unset;
@@ -382,6 +387,27 @@ main = ($) => {
             self.toggleFavStorage(id);
         })
 
+        $(document).on("mousedown.eventListener", selectors.sliderTray, (e) => {
+            self.isDragging = true;
+            self.startX = e.pageX;
+            self.scrollLeft = e.currentTarget.scrollLeft;
+            $(selectors.sliderTray).find("img").on("dragstart", (e)=> e.preventDefault());
+            $(selectors.body).css({
+                "user-select": "none",
+            })
+        })
+
+        $(document).on("mouseleave.eventListener mouseup.eventListener", selectors.sliderTray, (e) => {
+            self.isDragging = false;
+        })
+
+        $(document).on("mousemove.eventListener", selectors.sliderTray, (e) => {
+            if(!self.isDragging) return;
+            e.preventDefault();
+            const x = e.pageX;
+            const walk = (x - self.startX) * 1.5;
+            e.currentTarget.scrollLeft = self.scrollLeft - walk;
+        })
     };
 
 
