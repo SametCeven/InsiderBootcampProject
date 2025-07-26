@@ -464,6 +464,7 @@ main = ($) => {
             self.setProductStorage();
         } catch (err) {
             self.error = err;
+            self.renderError();
         } finally {
             self.loading = false;
         }
@@ -510,6 +511,12 @@ main = ($) => {
                 $(selectors.sliderTray).append($productItem)
             })
         }
+    }
+
+    self.renderError = () => {
+        const $errNotification = $(`<div> ${self.error} </div>`);
+        $(selectors.recommendationCarousel).remove();
+        $(selectors.appendLocation).append($errNotification); 
     }
 
     self.loadFont = () => {
