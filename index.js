@@ -156,7 +156,7 @@ main = ($) => {
                 background: none;
                 border: none;
                 cursor: pointer;
-                text-transformation: none;
+                text-decoration: none;
             }
             ${selectors.buttonBack}{
                 left: -35px;
