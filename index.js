@@ -40,7 +40,7 @@ main = ($) => {
         productCardInfoCurrentPrice: "product-card-info-current-price",
         favLiked: "fav-liked",
         addToCart: "add-to-cart",
-        addToCart: "add-to-cart-btn",
+        addToCartBtn: "add-to-cart-btn",
     };
 
     const selectors = {
@@ -82,7 +82,7 @@ main = ($) => {
         error: null,
         productData: [],
         currentIndex: 0,
-        favStorage: [],
+        favData: [],
         isDragging: false,
         startX: 0,
         scrollLeft: 0,
@@ -260,13 +260,9 @@ main = ($) => {
                 align-items: flex-end;
                 line-height: 22px;
                 font-weight: bold;
-                
             }
             ${selectors.favLiked}{
                 fill: #193DB0;
-            }
-            ${selectors.favoriteOption}{
-                
             }
             ${selectors.addToCart}{
                 display: flex;
@@ -353,8 +349,8 @@ main = ($) => {
 
     self.setEvents = () => {
         $(document).on("click.eventListener", selectors.buttonNext, (e) => {
-            const productWidth = $(selectors.productContainer).outerWidth();
-            const sliderTrayWidth = $(selectors.sliderTray).outerWidth();
+            const productWidth = $(selectors.productContainer).outerWidth(true);
+            const sliderTrayWidth = $(selectors.sliderTray).outerWidth(true);
 
             const visibleProductCount = Math.floor(sliderTrayWidth / productWidth);
             const totalProductsCount = self.productData.length;
@@ -407,6 +403,49 @@ main = ($) => {
             const x = e.pageX;
             const walk = (x - self.startX) * 1.5;
             e.currentTarget.scrollLeft = self.scrollLeft - walk;
+        })
+
+        $(document).on("touchstart.eventListener", selectors.sliderTray, (e) => {
+            self.isDragging = true;
+            self.startX = e.originalEvent.touches[0].pageX;
+            self.scrollLeft = e.currentTarget.scrollLeft;
+
+            $(selectors.sliderTray).find("img").on("dragstart", (e) => e.preventDefault());
+
+            $(selectors.body).css({
+                "user-select": "none",
+                "-webkit-user-select": "none",
+                "-ms-user-select": "none",
+                "-moz-user-select": "none",
+                "touch-action": "pan-y",
+            })
+        })
+
+        $(document).on("touchmove.eventListener", selectors.sliderTray, (e) => {
+            if(!self.isDragging) return;
+
+            const x = e.originalEvent.touches[0].pageX;
+            const walk = (x- self.startX) * 1.5;
+            e.currentTarget.scrollLeft = self.scrollLeft - walk;
+
+            e.preventDefault();
+        })
+
+        $(document).on("touchend.eventListener touchcancel.eventListener", selectors.sliderTray, (e) => {
+            self.isDragging = false;
+
+            const scrollLeft = e.currentTarget.scrollLeft;
+            const productWidth = $(selectors.productContainer).outerWidth(true);
+
+            self.currentIndex = Math.round(scrollLeft / productWidth);
+
+            $(selectors.body).css({
+                "user-select": "",
+                "-webkit-user-select": "",
+                "-ms-user-select": "",
+                "-moz-user-select": "",
+                "touch-action": "",
+            })
         })
     };
 
@@ -488,19 +527,19 @@ main = ($) => {
     }
 
     self.toggleFavStorage = (id) => {
-        if (self.favStorage.includes(id)) {
-            self.favStorage = self.favStorage.filter((f) => f !== id);
+        if (self.favData.includes(id)) {
+            self.favData = self.favData.filter((f) => f !== id);
         } else {
-            self.favStorage.push(id);
+            self.favData.push(id);
         }
-        localStorage.setItem("fav", JSON.stringify(self.favStorage));
+        localStorage.setItem("fav", JSON.stringify(self.favData));
     }
 
     self.getFavStorage = () => {
         if (localStorage.getItem("fav")) {
-            self.favStorage = JSON.parse(localStorage.getItem("fav"));
+            self.favData = JSON.parse(localStorage.getItem("fav"));
         } else {
-            localStorage.setItem("fav", self.favStorage);
+            localStorage.setItem("fav", self.favData);
         }
     }
 
@@ -508,7 +547,7 @@ main = ($) => {
         const $productContainer = $(selectors.productContainer);
         $productContainer.each((index, product) => {
             const id = $(product).data("id");
-            if (self.favStorage.includes(id)) {
+            if (self.favData.includes(id)) {
                 $(product).find(selectors.favPath).toggleClass(classes.favLiked);
             }
         })
