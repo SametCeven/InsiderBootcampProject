@@ -175,7 +175,6 @@ main = ($) => {
                 display: flex;
                 flex-direction: row;
                 align-items: stretch;
-                transform: translateX(0%) translateX(0px);
                 padding: 0;
                 margin: 0;
                 transition: transform 500ms;
@@ -397,6 +396,9 @@ main = ($) => {
 
         $(document).on("mouseleave.eventListener mouseup.eventListener", selectors.sliderTray, (e) => {
             self.isDragging = false;
+            const scrollLeft = e.currentTarget.scrollLeft;
+            const productWidth = $(selectors.productContainer).outerWidth(true);
+            self.currentIndex = Math.round(scrollLeft / productWidth);
         })
 
         $(document).on("mousemove.eventListener", selectors.sliderTray, (e) => {
@@ -480,20 +482,9 @@ main = ($) => {
 
     self.updateSliderPosition = () => {
         const $sliderTray = $(selectors.sliderTray);
-        const productWidth = $(selectors.productContainer).outerWidth() + 10;
-        const sliderTrayFullWidth = $sliderTray[0].scrollWidth;
-        const sliderTrayWidth = $sliderTray.outerWidth();
-
-        let offset = self.currentIndex * productWidth;
-        const maxOffset = sliderTrayFullWidth - sliderTrayWidth;
-
-        if (offset > maxOffset) {
-            offset = maxOffset;
-        }
-
-        $sliderTray.css({
-            transform: `translateX(-${offset}px)`
-        })
+        const productWidth = $(selectors.productContainer).outerWidth(true) + 10;
+        const scrollLeft = self.currentIndex * productWidth;
+        $sliderTray.scrollLeft(scrollLeft);
     }
 
     self.toggleFavStorage = (id) => {
