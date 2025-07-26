@@ -23,11 +23,14 @@ main = ($) => {
 
     const selectors = {
         appendLocation: `.product-detail`,
+        error: `.${classes.error}`,
+        loading: `.${classes.loading}`,
     };
 
     const self = {
         loading: false,
         error: null,
+        productData: [],
     };
 
     self.init = () => {
@@ -35,6 +38,7 @@ main = ($) => {
         self.buildCSS();
         self.buildHTML();
         self.setEvents();
+        self.fetchData();
     };
 
     self.reset = () => {
@@ -81,6 +85,25 @@ main = ($) => {
     };
 
 
+    self.fetchData = () => {
+        const baseUrl = `https://gist.githubusercontent.com/sevindi/5765c5812bbc8238a38b3cf52f233651/raw/56261d81af8561bf0a7cf692fe572f9e1e91f372/products.json`;
+        self.loading = true;
+        self.error = null;
+        self.productData = [];
+
+        $.ajax({
+            url: baseUrl,
+            method: "GET",
+        }).done((res) => {
+            self.productData = JSON.parse(res);
+            console.log(self.productData);
+            self.loading = false;
+        }).fail((err) => {
+            self.error = err;
+        }).always(() => {
+            self.loading = false;
+        })
+    }
 
 
 
