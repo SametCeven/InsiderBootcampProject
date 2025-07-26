@@ -171,9 +171,6 @@ main = ($) => {
                 height: 540px;
                 cursor: pointer;
             }
-            ${selectors.sliderWrapper}{
-            
-            }
             ${selectors.sliderTray}{
                 display: flex;
                 flex-direction: row;
@@ -215,6 +212,7 @@ main = ($) => {
                 position: absolute;
                 top: 6%;
                 right: 10%;
+                cursor: default;
             }
             ${selectors.productCardInfo}{
                 display: flex;
@@ -269,7 +267,7 @@ main = ($) => {
                 fill: #193DB0;
             }
             ${selectors.favoriteOption}{
-                cursor: default;
+                
             }
             ${selectors.addToCart}{
                 display: flex;
@@ -294,7 +292,7 @@ main = ($) => {
             @media (min-width: 992px){
                 ${selectors.recommendationCarousel}{
                     display: flex;
-                    justfiy-content: center;
+                    justify-content: center;
                     padding: 0px !important;
                 }
                 ${selectors.carouselContainer}{
