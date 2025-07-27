@@ -481,7 +481,7 @@ main = ($) => {
                                 <div class=${classes.productCardImgWrapper}>
                                     <a href=${product.url} target="__blank"> 
                                         <span>
-                                            <img src="${product.img}"></img>
+                                            <img src="${product.img}" alt="${product.name}"></img>
                                         </span>
                                     </a>
                                     <div class=${classes.favoriteOption}>
